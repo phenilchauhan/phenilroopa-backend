@@ -7,7 +7,7 @@ app.use(express.json());
 
 const API_KEY = process.env.GEMINI_API_KEY;
 
-// Health check
+// health check
 app.get("/", (req, res) => {
   res.send("Gemini Backend Running");
 });
@@ -17,9 +17,7 @@ app.post("/chat", async (req, res) => {
     const message = req.body.message;
 
     if (!API_KEY) {
-      return res.status(500).json({
-        error: "GEMINI_API_KEY not configured on server"
-      });
+      return res.json({ reply: "API key not configured on server" });
     }
 
     const response = await fetch(
@@ -41,14 +39,25 @@ app.post("/chat", async (req, res) => {
 
     const data = await response.json();
 
-    const reply =
-      data?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "No response from Gemini";
+    console.log("GEMINI RAW RESPONSE:", JSON.stringify(data, null, 2));
+
+    // ✅ SAFE FIX (THIS IS THE MAIN FIX)
+    let reply = "No response from Gemini";
+
+    if (data?.candidates?.length > 0) {
+      reply = data.candidates[0]?.content?.parts?.[0]?.text;
+    } 
+    else if (data?.error?.message) {
+      reply = data.error.message;
+    } 
+    else if (data?.promptFeedback?.blockReason) {
+      reply = "Blocked: " + data.promptFeedback.blockReason;
+    }
 
     res.json({ reply });
 
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.json({ reply: "Server error: " + err.message });
   }
 });
 
