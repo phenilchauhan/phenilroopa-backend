@@ -1,9 +1,9 @@
 {
   "name": "phenilroopa-backend",
   "version": "1.0.0",
-  "main": "script.js",
+  "main": "server.js",
   "scripts": {
-    "start": "node script.js"
+    "start": "node server.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.11.4",
